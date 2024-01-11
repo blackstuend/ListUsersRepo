@@ -2,6 +2,16 @@
 
 [Demo](https://blackstuend.github.io/ListUsersRepo/)
 
+## Prerequisite
+- Node.js v18
+
+### set environment
+```
+$ cp .env.example .env
+```
+
+* Modify the .env file to your own setting
+
 ## How to use 
 ```
 $ npm install 
