@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.3.11",
-    "axios": "^1.6.5"
+    "@iconify/vue": "^4.1.1",
+    "axios": "^1.6.5",
+    "lodash": "^4.17.21",
+    "vue": "^3.3.11"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.202",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
     "@vitejs/plugin-vue": "^4.5.2",

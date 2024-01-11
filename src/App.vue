@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import throttle from 'lodash/throttle';
+import { Icon } from '@iconify/vue';
 import { Repository } from './entities/Repository';
 
 import GithubCard from './components/GithubCard.vue';
@@ -8,21 +10,49 @@ import { getRepositories } from './apis';
 const username = import.meta.env.VITE_USERNAME;
 
 const repositories = ref<Repository[]>([]);
-const loading = ref<boolean>(false)
+const page = ref<number>(1);
+const hasNextPage = ref<boolean>(false);
 
-
-
-onMounted(async () => {
+async function getRepositoryData() {
   try {
-    loading.value = true
-    repositories.value = await getRepositories({
+    const result = await getRepositories({
       username,
       perPage: 10,
+      page: page.value,
     });
+
+    repositories.value.push(...result.repos);
+
+    if (result.hasNextPage) {
+      hasNextPage.value = true;
+    } else {
+      hasNextPage.value = false;
+    }
   } catch (error) {
-    alert('Error fetching repositories')
+    alert('Error fetching repositories');
     console.error(error);
   }
+}
+
+const handleScroll = throttle(() => {
+  const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+  if (!hasNextPage.value) return;
+
+  if (scrollTop + clientHeight >= scrollHeight - 150) {
+    page.value += 1;
+    getRepositoryData();
+  }
+}, 100);
+
+onMounted(async () => {
+  getRepositoryData();
+
+  window.addEventListener('scroll', handleScroll);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
 });
 </script>
 
@@ -44,20 +74,12 @@ onMounted(async () => {
         :language="repo.language"
       ></GithubCard>
     </div>
+    <Icon
+      v-if="hasNextPage"
+      icon="mdi:arrow-down"
+      class="text-6xl mx-auto text-light-300 animate-bounce mt-5"
+    ></Icon>
   </div>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+<style scoped></style>

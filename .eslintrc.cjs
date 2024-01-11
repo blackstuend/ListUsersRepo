@@ -4,7 +4,6 @@ module.exports = {
     browser: true, // browser global variables
     es2021: true, // adds all ECMAScript 2021 globals and automatically sets the ecmaVersion parser option to 12.
   },
-  // parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     parser: '@typescript-eslint/parser',
@@ -18,10 +17,8 @@ module.exports = {
   plugins: ['@typescript-eslint', 'prettier'],
   rules: {
     'prettier/prettier': 'error',
-    'import/resolver': {
-      node: {
-        extensions: ['.js', '.jsx', '.ts', '.tsx'],
-      },
-    },
+    'import/no-unresolved': 'off',
+    'import/extensions': 'off',
+    'import/no-extraneous-dependencies': 'off',
   },
 };

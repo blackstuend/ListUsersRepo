@@ -4,13 +4,21 @@ import { Repository } from '../entities/Repository';
 export interface GetRepositoriesParams {
   username: string;
 
-  // default value is 10
+  // default is 1
+  page?: number;
+
+  // default is 10
   perPage?: number;
+}
+
+export interface GetRepositoriesResponse {
+  repos: Repository[];
+  hasNextPage: boolean;
 }
 
 export async function getRepositories(
   params: GetRepositoriesParams,
-): Promise<Repository[]> {
+): Promise<GetRepositoriesResponse> {
   const url = `https://api.github.com/users/${params.username}/repos`;
   const headers = {
     Accept: 'application/vnd.github+json',
@@ -22,6 +30,7 @@ export async function getRepositories(
     const response = await axios.get(url, {
       headers,
       params: {
+        page: params.page ?? 1,
         per_page: params.perPage ?? 10,
       },
     });
@@ -42,7 +51,10 @@ export async function getRepositories(
       watchersCount: repo.watchers_count,
     }));
 
-    return repositories;
+    return {
+      repos: repositories,
+      hasNextPage: response.data.length > 0,
+    };
   } catch (error) {
     throw new Error('Failed to fetch repositories');
   }
