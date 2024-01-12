@@ -9,9 +9,13 @@ import { getRepositories } from './apis';
 
 const username = import.meta.env.VITE_USERNAME;
 
+const topVirtualBoxRef = ref<HTMLElement | null>(null);
+const bottomVirtualBoxRef = ref<HTMLElement | null>(null);
+
 const repositories = ref<Repository[]>([]);
 const page = ref<number>(1);
 const hasNextPage = ref<boolean>(false);
+const repositoryList = ref<Repository[]>([]);
 
 async function getRepositoryData() {
   try {
@@ -22,6 +26,7 @@ async function getRepositoryData() {
     });
 
     repositories.value.push(...result.repos);
+    repositoryList.value.push(...result.repos);
 
     if (result.hasNextPage) {
       hasNextPage.value = true;
@@ -34,7 +39,34 @@ async function getRepositoryData() {
   }
 }
 
-const handleScroll = throttle(() => {
+const handleSetVirtualBoxHeight = () => {
+  const { scrollTop } = document.documentElement;
+
+  const maxCardLength = 30;
+  const headerHeight = 100;
+  const cardHeight = 120;
+
+  const startIndex = Math.max(
+    Math.floor((scrollTop - headerHeight) / cardHeight),
+    0,
+  );
+
+  const endIndex = Math.min(
+    startIndex + maxCardLength,
+    repositories.value.length,
+  );
+
+  const topVirtualBoxHeight = startIndex * cardHeight;
+  const bottomVirtualBoxHeight =
+    (repositories.value.length - endIndex) * cardHeight;
+
+  topVirtualBoxRef.value!.style.height = `${topVirtualBoxHeight}px`;
+  bottomVirtualBoxRef.value!.style.height = `${bottomVirtualBoxHeight}px`;
+
+  repositoryList.value = repositories.value.slice(startIndex, endIndex);
+};
+
+const handleGetNextPageRepositoryData = throttle(() => {
   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
 
   if (!hasNextPage.value) return;
@@ -43,7 +75,13 @@ const handleScroll = throttle(() => {
     page.value += 1;
     getRepositoryData();
   }
-}, 100);
+}, 300);
+
+const handleScroll = () => {
+  handleGetNextPageRepositoryData();
+
+  handleSetVirtualBoxHeight();
+};
 
 onMounted(async () => {
   getRepositoryData();
@@ -62,8 +100,9 @@ onBeforeUnmount(() => {
       <h1 class="text-2xl font-semibold">GitHub {{ username }}</h1>
     </header>
     <div class="mt-4 flex flex-col gap-4">
+      <div ref="topVirtualBoxRef"></div>
       <GithubCard
-        v-for="repo in repositories"
+        v-for="repo in repositoryList"
         :key="repo.url"
         :watchers-count="repo.watchersCount"
         :title="repo.title"
@@ -73,6 +112,7 @@ onBeforeUnmount(() => {
         :forks-count="repo.forksCount"
         :language="repo.language"
       ></GithubCard>
+      <div ref="bottomVirtualBoxRef"></div>
     </div>
     <Icon
       v-if="hasNextPage"

@@ -1,8 +1,8 @@
 export interface Repository {
   title: string;
-  description: string;
+  description: string | null;
   url: string;
-  language: string;
+  language: string | null;
   starsCount: number;
   forksCount: number;
   watchersCount: number;
